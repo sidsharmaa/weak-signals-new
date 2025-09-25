@@ -1,0 +1,11 @@
+# config/config.yaml
+data:
+  raw_path: "data/raw/arxiv-metadata-oai-snapshot.json"
+  processed_path: "data/processed/cv_arxiv_data_2010-2022.parquet"
+
+processing:
+  # Ensure each keyword is a list item with a space after the hyphen
+  keywords:
+    - "computer vision"
+  start_year: 2010
+  end_year: 2022
