@@ -1,30 +1,58 @@
-# -*- coding: utf-8 -*-
-import click
+# src/data/make_dataset.py
+import os
 import logging
-from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+import pandas as pd
+from src.config import config, PROJECT_ROOT
+from src.data.data_ingestion import LocalJsonDataSource
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-@click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
-def main(input_filepath, output_filepath):
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
-    """
-    logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
+def main():
+    logging.info("Starting local JSON processing pipeline...")
+    
+    full_raw_path = PROJECT_ROOT / config.data.raw_path
+    source = LocalJsonDataSource(file_path=str(full_raw_path))
+    data = source.fetch_data()
 
+    if data.empty:
+        logging.warning("No data loaded from JSON file. Exiting.")
+        return
 
+    # 2. Filter by a LIST of keywords
+    logging.info(f"Filtering for keywords: {config.processing.keywords}...")
+    
+    # Create a single regex pattern by joining keywords with '|' (which means OR)
+    keyword_regex = '|'.join(config.processing.keywords)
+    
+    # The 'case=False' flag makes the search case-insensitive
+    mask = data['summary'].str.contains(keyword_regex, case=False, na=False) | \
+           data['title'].str.contains(keyword_regex, case=False, na=False)
+    
+    filtered_data = data[mask].copy()
+    logging.info(f"Found {len(filtered_data)} records containing the keywords.")
+
+    if filtered_data.empty:
+        logging.warning("No records found with the specified keywords. Exiting.")
+        return
+
+    # 3. Filter by date range
+    logging.info(f"Filtering for years {config.processing.start_year}-{config.processing.end_year}...")
+    filtered_data['published'] = pd.to_datetime(filtered_data['published']).dt.year
+    mask = (
+        (filtered_data['published'] >= config.processing.start_year) & 
+        (filtered_data['published'] <= config.processing.end_year)
+    )
+    final_data = filtered_data.loc[mask]
+    logging.info(f"Found {len(final_data)} records within the date range.")
+
+    if final_data.empty:
+        logging.warning("No data remains after filtering. Exiting.")
+        return
+
+    # 4. Save the final, processed data
+    processed_path = PROJECT_ROOT / config.data.processed_path
+    os.makedirs(os.path.dirname(processed_path), exist_ok=True)
+    final_data.to_parquet(processed_path, index=False)
+    logging.info(f"Pipeline complete. Saved {len(final_data)} records to {processed_path}")
 if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    # not used in this stub but often useful for finding various files
-    project_dir = Path(__file__).resolve().parents[2]
-
-    # find .env automagically by walking up directories until it's found, then
-    # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
-
     main()
