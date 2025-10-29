@@ -6,6 +6,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+venv/
 .venv
 .Python
 env/
@@ -88,3 +89,23 @@ target/
 
 # Mypy cache
 .mypy_cache/
+
+# Data
+data/raw/
+data/processed/
+data/external/
+
+# Reports
+reports/
+
+# Python environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Test cache
+.pytest_cache/
