@@ -1,11 +1,33 @@
-# config/config.yaml
 data:
   raw_path: "data/raw/arxiv-metadata-oai-snapshot.json"
   processed_path: "data/processed/cv_arxiv_data_2010-2022.parquet"
+  external_keywords: "data/external/cv_keywords_cleaned_and_standardized.txt"
+  
+metrics:
+  tf_path: "data/processed/term_frequencies_per_year_accurate.csv"
+  df_path: "data/processed/document_frequencies_per_year_accurate.csv"
+  dov_path: "data/processed/dov_per_year_best_w_0.025.csv"
+  dod_path: "data/processed/dod_per_year_w_0.025.csv"
 
 processing:
-  # Ensure each keyword is a list item with a space after the hyphen
   keywords:
     - "computer vision"
   start_year: 2010
   end_year: 2022
+  dov_w_value_to_test: [0.025, 0.05, 0.075, 0.1]
+  optimal_w: 0.025
+
+analysis:
+  periods:
+    p1: [2010, 2014]
+    p2: [2014, 2018]
+    p3: [2018, 2023]
+  reports_dir: "reports/figures"
+  kem_data_path: "reports/figures/kem_data_"
+  kim_data_path: "reports/figures/kim_data_"
+  kem_evolution_path: "reports/figures/signal_evolution_across_periods.csv"
+  kim_evolution_path: "reports/figures/kim_signal_evolution_across_periods.csv"
+  
+validation:
+  all_validated_path: "reports/figures/final_validated_signals_all.csv"
+  high_impact_path: "reports/figures/final_high_impact_signals.csv"

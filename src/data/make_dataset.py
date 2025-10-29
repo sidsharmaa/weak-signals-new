@@ -1,4 +1,3 @@
-# src/data/make_dataset.py
 import os
 import logging
 import pandas as pd
@@ -10,7 +9,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def main():
     logging.info("Starting local JSON processing pipeline...")
     
-    full_raw_path = PROJECT_ROOT / config.data.raw_path
+    full_raw_path = os.path.join(PROJECT_ROOT, config.data.raw_path)
     source = LocalJsonDataSource(file_path=str(full_raw_path))
     data = source.fetch_data()
 
@@ -50,7 +49,7 @@ def main():
         return
 
     # 4. Save the final, processed data
-    processed_path = PROJECT_ROOT / config.data.processed_path
+    processed_path = os.path.join(PROJECT_ROOT, config.data.processed_path)
     os.makedirs(os.path.dirname(processed_path), exist_ok=True)
     final_data.to_parquet(processed_path, index=False)
     logging.info(f"Pipeline complete. Saved {len(final_data)} records to {processed_path}")
